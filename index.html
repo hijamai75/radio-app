@@ -100,7 +100,14 @@
 
 <script>
 const STATIONS = [
-  { id: 0, name: "MFM Radio", genre: "Moroccan", url: "https://a5.asurahosting.com:7980/radio.mp3",          color: "#C8A97E", emoji: "🎷", hls: false },
+ { id: 0,
+    name: "MFM Radio",
+    genre: "Moroccan",
+    url: "https://a5.asurahosting.com:7980/radio.mp3",
+    color: "#C8A97E",
+    emoji: "🎷",              // optional fallback
+    icon: "icons/mfm.png"     // <-- your image
+  },
   { id: 1, name: "ASWAT",     genre: "Moroccan", url: "https://aswat.ice.infomaniak.ch/aswat-high.mp3",      color: "#6BAF92", emoji: "🌿", hls: false },
   { id: 2, name: "MedRadio",  genre: "Moroccan", url: "https://medradio.ice.infomaniak.ch/medradio-128.mp3", color: "#5B9EC9", emoji: "🌊", hls: false },
   { id: 3, name: "Chada FM",  genre: "Moroccan", url: "https://stream.bodkas.com/playlist?id=chadafmradio",  color: "#E8613C", emoji: "🇲🇦", hls: false },
