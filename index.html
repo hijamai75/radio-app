@@ -1,721 +1,312 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0"
-    />
-    <title>Radio Player</title>
-    <link
-      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Serif+Display&display=swap"
-      rel="stylesheet"
-    />
-    <style>
-      * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-        -webkit-tap-highlight-color: transparent;
-      }
-      ::-webkit-scrollbar {
-        display: none;
-      }
-      body {
-        background: #0a0a0f;
-        font-family: "DM Sans", sans-serif;
-        display: flex;
-        justify-content: center;
-        min-height: 100vh;
-      }
-
-      .app {
-        width: 100%;
-        max-width: 390px;
-        min-height: 100vh;
-        position: relative;
-        overflow: hidden;
-        padding: 50px 0 40px;
-      }
-
-      .glow {
-        position: absolute;
-        top: -80px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 340px;
-        height: 340px;
-        border-radius: 50%;
-        pointer-events: none;
-        transition: background 1s ease;
-      }
-
-      .header {
-        padding: 0 24px 24px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        position: relative;
-        z-index: 1;
-      }
-      .title {
-        font-family: "DM Serif Display", serif;
-        font-size: 26px;
-        color: #fff;
-        line-height: 1;
-      }
-      .subtitle {
-        font-size: 12px;
-        color: rgba(255, 255, 255, 0.35);
-        letter-spacing: 1.5px;
-        text-transform: uppercase;
-        margin-top: 2px;
-      }
-
-      .tabs {
-        display: flex;
-        gap: 8px;
-      }
-      .tab {
-        padding: 8px 14px;
-        border-radius: 20px;
-        border: none;
-        cursor: pointer;
-        font-size: 13px;
-        font-weight: 500;
-        font-family: "DM Sans", sans-serif;
-        transition: all 0.2s;
-        background: transparent;
-        color: rgba(255, 255, 255, 0.4);
-      }
-      .tab.active {
-        background: rgba(255, 255, 255, 0.12);
-        color: #fff;
-      }
-
-      .view {
-        padding: 0 24px;
-        position: relative;
-        z-index: 1;
-      }
-
-      .now-playing-card {
-        border-radius: 24px;
-        padding: 32px 24px 28px;
-        margin-bottom: 28px;
-        position: relative;
-        overflow: hidden;
-        transition: background 1s ease, border 1s ease;
-      }
-      .pulse-ring {
-        position: absolute;
-        top: -30px;
-        right: -30px;
-        width: 140px;
-        height: 140px;
-        border-radius: 50%;
-        opacity: 0;
-      }
-      .pulse-ring.active {
-        animation: pulse-ring 2.5s ease-out infinite;
-      }
-
-      .station-emoji {
-        font-size: 64px;
-        text-align: center;
-        margin-bottom: 16px;
-        display: block;
-      }
-      .station-emoji.spinning {
-        animation: spin-slow 8s linear infinite;
-      }
-
-      .station-name {
-        font-size: 22px;
-        font-weight: 700;
-        color: #fff;
-        letter-spacing: -0.5px;
-        margin-bottom: 4px;
-        text-align: center;
-      }
-      .station-genre {
-        font-size: 13px;
-        text-transform: uppercase;
-        letter-spacing: 1.5px;
-        font-weight: 500;
-        text-align: center;
-      }
-      .status-msg {
-        font-size: 12px;
-        margin-top: 6px;
-        text-align: center;
-      }
-
-      .visualizer {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 3px;
-        height: 40px;
-        margin-top: 20px;
-      }
-      .bar {
-        width: 3px;
-        border-radius: 2px;
-        height: 4px;
-        opacity: 0.25;
-        transition: opacity 0.3s;
-      }
-      .bar.active {
-        opacity: 0.85;
-      }
-
-      .controls {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 28px;
-        margin-bottom: 32px;
-      }
-      .skip-btn {
-        background: rgba(255, 255, 255, 0.07);
-        border: none;
-        cursor: pointer;
-        width: 48px;
-        height: 48px;
-        border-radius: 50%;
-        font-size: 18px;
-        color: rgba(255, 255, 255, 0.7);
-        transition: all 0.2s;
-      }
-      .skip-btn:active {
-        transform: scale(0.92);
-        background: rgba(255, 255, 255, 0.12);
-      }
-      .play-btn {
-        width: 72px;
-        height: 72px;
-        border-radius: 50%;
-        border: none;
-        cursor: pointer;
-        font-size: 26px;
-        transition: all 0.3s ease;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-      .play-btn:active {
-        transform: scale(0.94);
-      }
-
-      .volume-row {
-        margin-bottom: 32px;
-      }
-      .volume-icons {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 10px;
-        font-size: 12px;
-        color: rgba(255, 255, 255, 0.4);
-      }
-      input[type="range"] {
-        -webkit-appearance: none;
-        appearance: none;
-        width: 100%;
-        height: 4px;
-        border-radius: 4px;
-        outline: none;
-        cursor: pointer;
-      }
-      input[type="range"]::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        width: 18px;
-        height: 18px;
-        border-radius: 50%;
-        background: #fff;
-        cursor: pointer;
-      }
-
-      .dots {
-        display: flex;
-        justify-content: center;
-        gap: 10px;
-      }
-      .dot {
-        height: 8px;
-        border-radius: 4px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        background: rgba(255, 255, 255, 0.2);
-        width: 8px;
-      }
-
-      .station-list {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-      }
-      .station-card {
-        display: flex;
-        align-items: center;
-        gap: 14px;
-        padding: 14px 16px;
-        border-radius: 16px;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        border: 1px solid rgba(255, 255, 255, 0.07);
-        background: rgba(255, 255, 255, 0.04);
-      }
-      .station-card.selected {
-      }
-      .card-icon {
-        width: 46px;
-        height: 46px;
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 22px;
-        flex-shrink: 0;
-      }
-      .card-name {
-        font-weight: 600;
-        font-size: 15px;
-        color: rgba(255, 255, 255, 0.85);
-        letter-spacing: -0.2px;
-        margin-bottom: 2px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      .card-genre {
-        font-size: 12px;
-        letter-spacing: 0.5px;
-        text-transform: uppercase;
-        font-weight: 500;
-        color: rgba(255, 255, 255, 0.35);
-      }
-      .card-bars {
-        display: flex;
-        align-items: center;
-        gap: 3px;
-        flex-shrink: 0;
-      }
-      .card-bar {
-        width: 3px;
-        border-radius: 2px;
-        height: 4px;
-      }
-
-      .section-label {
-        font-size: 11px;
-        color: rgba(255, 255, 255, 0.3);
-        letter-spacing: 1.5px;
-        text-transform: uppercase;
-        margin-bottom: 14px;
-      }
-
-      @keyframes bar-dance {
-        from {
-          height: var(--min-h);
-        }
-        to {
-          height: var(--max-h);
-        }
-      }
-      @keyframes mini-bar {
-        from {
-          height: 3px;
-        }
-        to {
-          height: var(--max-h);
-        }
-      }
-      @keyframes pulse-ring {
-        0% {
-          transform: scale(1);
-          opacity: 0.4;
-        }
-        100% {
-          transform: scale(1.35);
-          opacity: 0;
-        }
-      }
-      @keyframes spin-slow {
-        from {
-          transform: rotate(0deg);
-        }
-        to {
-          transform: rotate(360deg);
-        }
-      }
-      @keyframes fade-in {
-        from {
-          opacity: 0;
-          transform: translateY(8px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <div class="app" id="app">
-      <div class="glow" id="glow"></div>
-
-      <div class="header">
-        <div>
-          <div class="title">Radio</div>
-          <div class="subtitle">Live Streams</div>
-        </div>
-        <div class="tabs">
-          <button
-            class="tab active"
-            onclick="switchView('player')"
-            id="tab-player"
-          >
-            Player
-          </button>
-          <button
-            class="tab"
-            onclick="switchView('stations')"
-            id="tab-stations"
-          >
-            Stations
-          </button>
-        </div>
-      </div>
-
-      <!-- PLAYER VIEW -->
-      <div class="view" id="view-player">
-        <div class="now-playing-card" id="now-playing-card">
-          <div class="pulse-ring" id="pulse-ring"></div>
-          <span class="station-emoji" id="station-emoji">🎷</span>
-          <div class="station-name" id="station-name">Jazz24</div>
-          <div class="station-genre" id="station-genre">Jazz</div>
-          <div
-            class="status-msg"
-            id="status-msg"
-            style="color: rgba(255, 255, 255, 0.4)"
-          ></div>
-          <div class="visualizer" id="visualizer"></div>
-        </div>
-
-        <div class="controls">
-          <button class="skip-btn" onclick="skipStation(-1)">⏮</button>
-          <button class="play-btn" id="play-btn" onclick="togglePlay()">
-            ▶
-          </button>
-          <button class="skip-btn" onclick="skipStation(1)">⏭</button>
-        </div>
-
-        <div class="volume-row">
-          <div class="volume-icons"><span>🔈</span><span>🔊</span></div>
-          <input
-            type="range"
-            id="volume-slider"
-            min="0"
-            max="1"
-            step="0.01"
-            value="0.8"
-            oninput="setVolume(this.value)"
-          />
-        </div>
-
-        <div class="dots" id="dots"></div>
-      </div>
-
-      <!-- STATIONS VIEW -->
-      <div class="view" id="view-stations" style="display: none">
-        <div class="section-label">3 Stations</div>
-        <div class="station-list" id="station-list"></div>
-      </div>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Radio Player</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.4.12/hls.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  ::-webkit-scrollbar { display: none; }
+  body { background: #0A0A0F; font-family: 'DM Sans', sans-serif; display: flex; justify-content: center; min-height: 100vh; }
+  .app { width: 100%; max-width: 390px; min-height: 100vh; position: relative; overflow: hidden; padding: 50px 0 40px; }
+  .glow { position: absolute; top: -80px; left: 50%; transform: translateX(-50%); width: 340px; height: 340px; border-radius: 50%; pointer-events: none; transition: background 1s ease; }
+  .header { padding: 0 24px 24px; display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 1; }
+  .title { font-family: 'DM Serif Display', serif; font-size: 26px; color: #fff; line-height: 1; }
+  .subtitle { font-size: 12px; color: rgba(255,255,255,0.35); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 2px; }
+  .tabs { display: flex; gap: 8px; }
+  .tab { padding: 8px 14px; border-radius: 20px; border: none; cursor: pointer; font-size: 13px; font-weight: 500; font-family: 'DM Sans', sans-serif; transition: all 0.2s; background: transparent; color: rgba(255,255,255,0.4); }
+  .tab.active { background: rgba(255,255,255,0.12); color: #fff; }
+  .view { padding: 0 24px; position: relative; z-index: 1; }
+  .now-playing-card { border-radius: 24px; padding: 32px 24px 28px; margin-bottom: 28px; position: relative; overflow: hidden; transition: background 1s ease, border 1s ease; }
+  .pulse-ring { position: absolute; top: -30px; right: -30px; width: 140px; height: 140px; border-radius: 50%; opacity: 0; }
+  .pulse-ring.active { animation: pulse-ring 2.5s ease-out infinite; }
+  .station-emoji { font-size: 64px; text-align: center; margin-bottom: 16px; display: block; }
+  .station-emoji.spinning { animation: spin-slow 8s linear infinite; }
+  .station-name { font-size: 22px; font-weight: 700; color: #fff; letter-spacing: -0.5px; margin-bottom: 4px; text-align: center; }
+  .station-genre { font-size: 13px; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 500; text-align: center; }
+  .status-msg { font-size: 12px; margin-top: 6px; text-align: center; }
+  .visualizer { display: flex; align-items: center; justify-content: center; gap: 3px; height: 40px; margin-top: 20px; }
+  .bar { width: 3px; border-radius: 2px; height: 4px; opacity: 0.25; transition: opacity 0.3s; }
+  .bar.active { opacity: 0.85; }
+  .controls { display: flex; align-items: center; justify-content: center; gap: 28px; margin-bottom: 32px; }
+  .skip-btn { background: rgba(255,255,255,0.07); border: none; cursor: pointer; width: 48px; height: 48px; border-radius: 50%; font-size: 18px; color: rgba(255,255,255,0.7); transition: all 0.2s; }
+  .skip-btn:active { transform: scale(0.92); background: rgba(255,255,255,0.12); }
+  .play-btn { width: 72px; height: 72px; border-radius: 50%; border: none; cursor: pointer; font-size: 26px; transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; }
+  .play-btn:active { transform: scale(0.94); }
+  .volume-row { margin-bottom: 32px; }
+  .volume-icons { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 12px; color: rgba(255,255,255,0.4); }
+  input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 4px; border-radius: 4px; outline: none; cursor: pointer; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #fff; cursor: pointer; }
+  .dots { display: flex; justify-content: center; gap: 10px; }
+  .dot { height: 8px; border-radius: 4px; cursor: pointer; transition: all 0.3s ease; background: rgba(255,255,255,0.2); width: 8px; }
+  .station-list { display: flex; flex-direction: column; gap: 8px; }
+  .station-card { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: 16px; cursor: pointer; transition: all 0.2s ease; border: 1px solid rgba(255,255,255,0.07); background: rgba(255,255,255,0.04); }
+  .card-icon { width: 46px; height: 46px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+  .card-name { font-weight: 600; font-size: 15px; color: rgba(255,255,255,0.85); letter-spacing: -0.2px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .card-genre { font-size: 12px; letter-spacing: 0.5px; text-transform: uppercase; font-weight: 500; color: rgba(255,255,255,0.35); }
+  .card-bars { display: flex; align-items: center; gap: 3px; flex-shrink: 0; }
+  .card-bar { width: 3px; border-radius: 2px; height: 4px; }
+  .section-label { font-size: 11px; color: rgba(255,255,255,0.3); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 14px; }
+  .hls-badge { display: inline-block; font-size: 9px; background: rgba(255,255,255,0.15); color: rgba(255,255,255,0.5); padding: 2px 6px; border-radius: 6px; letter-spacing: 1px; margin-left: 6px; vertical-align: middle; }
+  @keyframes bar-dance { from { height: var(--min-h); } to { height: var(--max-h); } }
+  @keyframes mini-bar { from { height: 3px; } to { height: var(--max-h); } }
+  @keyframes pulse-ring { 0% { transform: scale(1); opacity: 0.4; } 100% { transform: scale(1.35); opacity: 0; } }
+  @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  @keyframes fade-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <div class="glow" id="glow"></div>
+  <div class="header">
+    <div>
+      <div class="title">Radio</div>
+      <div class="subtitle">Live Streams</div>
     </div>
+    <div class="tabs">
+      <button class="tab active" onclick="switchView('player')" id="tab-player">Player</button>
+      <button class="tab" onclick="switchView('stations')" id="tab-stations">Stations</button>
+    </div>
+  </div>
 
-    <script>
-      const STATIONS = [
-        {
-          id: 0,
-          name: "Jazz24",
-          genre: "Jazz",
-          url: "https://live.wostreaming.net/direct/ppm-jazz24aac-ibc1",
-          color: "#C8A97E",
-          emoji: "🎷",
-        },
-        {
-          id: 1,
-          name: "SomaFM Groove Salad",
-          genre: "Ambient",
-          url: "https://ice1.somafm.com/groovesalad-128-mp3",
-          color: "#6BAF92",
-          emoji: "🌿",
-        },
-        {
-          id: 2,
-          name: "Radio Paradise",
-          genre: "Eclectic",
-          url: "https://stream.radioparadise.com/aac-128",
-          color: "#5B9EC9",
-          emoji: "🌊",
-        },
-      ];
+  <div class="view" id="view-player">
+    <div class="now-playing-card" id="now-playing-card">
+      <div class="pulse-ring" id="pulse-ring"></div>
+      <span class="station-emoji" id="station-emoji">🎷</span>
+      <div class="station-name" id="station-name">Jazz24</div>
+      <div class="station-genre" id="station-genre">Jazz</div>
+      <div class="status-msg" id="status-msg" style="color:rgba(255,255,255,0.4)"></div>
+      <div class="visualizer" id="visualizer"></div>
+    </div>
+    <div class="controls">
+      <button class="skip-btn" onclick="skipStation(-1)">⏮</button>
+      <button class="play-btn" id="play-btn" onclick="togglePlay()">▶</button>
+      <button class="skip-btn" onclick="skipStation(1)">⏭</button>
+    </div>
+    <div class="volume-row">
+      <div class="volume-icons"><span>🔈</span><span>🔊</span></div>
+      <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.8" oninput="setVolume(this.value)">
+    </div>
+    <div class="dots" id="dots"></div>
+  </div>
 
-      let currentIdx = 0;
-      let isPlaying = false;
-      let isLoading = false;
-      const audio = new Audio();
-      audio.preload = "none";
-      audio.volume = 0.8;
+  <div class="view" id="view-stations" style="display:none">
+    <div class="section-label">4 Stations</div>
+    <div class="station-list" id="station-list"></div>
+  </div>
+</div>
 
-      // Build visualizer bars
-      const viz = document.getElementById("visualizer");
-      const barMins = [],
-        barMaxs = [];
-      for (let i = 0; i < 28; i++) {
-        const b = document.createElement("div");
-        b.className = "bar";
-        const minH = 4 + Math.random() * 8;
-        const maxH = 16 + Math.random() * 24;
-        barMins.push(minH);
-        barMaxs.push(maxH);
-        b.style.setProperty("--min-h", minH + "px");
-        b.style.setProperty("--max-h", maxH + "px");
-        b.style.animationDelay = i * 0.04 + "s";
-        viz.appendChild(b);
-      }
+<script>
+const STATIONS = [
+  { id: 0, name: "MFM Radio", genre: "Moroccan", url: "https://a5.asurahosting.com:7980/radio.mp3",          color: "#C8A97E", emoji: "🎷", hls: false },
+  { id: 1, name: "ASWAT",     genre: "Moroccan", url: "https://aswat.ice.infomaniak.ch/aswat-high.mp3",      color: "#6BAF92", emoji: "🌿", hls: false },
+  { id: 2, name: "MedRadio",  genre: "Moroccan", url: "https://medradio.ice.infomaniak.ch/medradio-128.mp3", color: "#5B9EC9", emoji: "🌊", hls: false },
+  { id: 3, name: "Chada FM",  genre: "Moroccan", url: "https://stream.bodkas.com/playlist?id=chadafmradio",  color: "#E8613C", emoji: "🇲🇦", hls: false },
+];
 
-      // Build dots
-      const dotsEl = document.getElementById("dots");
-      STATIONS.forEach((s, i) => {
-        const d = document.createElement("div");
-        d.className = "dot";
-        d.id = "dot-" + i;
-        d.onclick = () => loadStation(i);
-        dotsEl.appendChild(d);
-      });
+let currentIdx = 0;
+let isPlaying = false;
+let isLoading = false;
+let hlsInstance = null;
+const audio = new Audio();
+audio.preload = "none";
+audio.volume = 0.8;
 
-      // Build station list
-      const listEl = document.getElementById("station-list");
-      STATIONS.forEach((s, i) => {
-        const card = document.createElement("div");
-        card.className = "station-card";
-        card.id = "card-" + i;
-        card.innerHTML = `
-    <div class="card-icon" id="card-icon-${i}" style="background:${
-          s.color
-        }33">${s.emoji}</div>
+// Build visualizer bars
+const viz = document.getElementById('visualizer');
+for (let i = 0; i < 28; i++) {
+  const b = document.createElement('div');
+  b.className = 'bar';
+  const minH = 4 + Math.random() * 8;
+  const maxH = 16 + Math.random() * 24;
+  b.style.setProperty('--min-h', minH + 'px');
+  b.style.setProperty('--max-h', maxH + 'px');
+  b.style.animationDelay = (i * 0.04) + 's';
+  viz.appendChild(b);
+}
+
+// Build dots
+const dotsEl = document.getElementById('dots');
+STATIONS.forEach((s, i) => {
+  const d = document.createElement('div');
+  d.className = 'dot';
+  d.id = 'dot-' + i;
+  d.onclick = () => loadStation(i);
+  dotsEl.appendChild(d);
+});
+
+// Build station list
+const listEl = document.getElementById('station-list');
+STATIONS.forEach((s, i) => {
+  const card = document.createElement('div');
+  card.className = 'station-card';
+  card.id = 'card-' + i;
+  card.innerHTML = `
+    <div class="card-icon" id="card-icon-${i}" style="background:${s.color}33">${s.emoji}</div>
     <div style="flex:1;min-width:0">
-      <div class="card-name" id="card-name-${i}">${s.name}</div>
+      <div class="card-name" id="card-name-${i}">${s.name}${s.hls ? '<span class="hls-badge">HLS</span>' : ''}</div>
       <div class="card-genre" id="card-genre-${i}">${s.genre}</div>
     </div>
     <div class="card-bars" id="card-bars-${i}" style="display:none">
-      ${[1, 2, 3]
-        .map(
-          (j) =>
-            `<div class="card-bar" style="background:${s.color};--max-h:${
-              8 + j * 4
-            }px" id="cbar-${i}-${j}"></div>`
-        )
-        .join("")}
+      ${[1,2,3].map(j => `<div class="card-bar" style="background:${s.color};--max-h:${8+j*4}px" id="cbar-${i}-${j}"></div>`).join('')}
     </div>`;
-        card.onclick = () => {
-          loadStation(i);
-          switchView("player");
-        };
-        listEl.appendChild(card);
+  card.onclick = () => { loadStation(i); switchView('player'); };
+  listEl.appendChild(card);
+});
+
+function destroyHls() {
+  if (hlsInstance) {
+    hlsInstance.destroy();
+    hlsInstance = null;
+  }
+}
+
+function loadStation(idx) {
+  currentIdx = idx;
+  isPlaying = false;
+  isLoading = true;
+  updateUI();
+  setStatus('Connecting…');
+
+  const s = STATIONS[idx];
+  destroyHls();
+  audio.pause();
+  audio.src = '';
+
+  if (s.hls) {
+    // iPhone Safari natively supports HLS — no HLS.js needed
+    if (audio.canPlayType('application/vnd.apple.mpegurl')) {
+      audio.src = s.url;
+      audio.load();
+      audio.play().catch(() => setStatus('Tap play to start'));
+    } else if (Hls.isSupported()) {
+      // Desktop Chrome/Firefox — use HLS.js
+      hlsInstance = new Hls({ lowLatencyMode: true });
+      hlsInstance.loadSource(s.url);
+      hlsInstance.attachMedia(audio);
+      hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
+        audio.play().catch(() => setStatus('Tap play to start'));
       });
-
-      function updateUI() {
-        const s = STATIONS[currentIdx];
-
-        // Glow + card
-        document.getElementById(
-          "glow"
-        ).style.background = `radial-gradient(circle, ${s.color}30 0%, transparent 70%)`;
-        const card = document.getElementById("now-playing-card");
-        card.style.background = `linear-gradient(145deg, ${s.color}22, ${s.color}08)`;
-        card.style.border = `1px solid ${s.color}30`;
-
-        // Emoji, name, genre
-        document.getElementById("station-emoji").textContent = s.emoji;
-        document.getElementById("station-name").textContent = s.name;
-        const genreEl = document.getElementById("station-genre");
-        genreEl.textContent = s.genre;
-        genreEl.style.color = s.color;
-
-        // Play button
-        const btn = document.getElementById("play-btn");
-        btn.style.background = isLoading
-          ? "rgba(255,255,255,0.1)"
-          : `linear-gradient(135deg, ${s.color}, ${s.color}cc)`;
-        btn.style.boxShadow = isPlaying ? `0 0 32px ${s.color}55` : "none";
-        btn.textContent = isLoading ? "⏳" : isPlaying ? "⏸" : "▶";
-
-        // Emoji spin
-        const emojiEl = document.getElementById("station-emoji");
-        emojiEl.className = "station-emoji" + (isPlaying ? " spinning" : "");
-
-        // Pulse ring
-        const ring = document.getElementById("pulse-ring");
-        ring.style.border = `1px solid ${s.color}30`;
-        ring.className = "pulse-ring" + (isPlaying ? " active" : "");
-
-        // Visualizer bars
-        document.querySelectorAll(".bar").forEach((b, i) => {
-          b.style.background = s.color;
-          if (isPlaying && !isLoading) {
-            b.classList.add("active");
-            b.style.animation = `bar-dance ${
-              0.6 + Math.random() * 0.8
-            }s ease-in-out infinite alternate`;
-            b.style.animationDelay = i * 0.04 + "s";
-          } else {
-            b.classList.remove("active");
-            b.style.animation = "none";
-            b.style.height = "4px";
-          }
-        });
-
-        // Volume slider
-        document.getElementById(
-          "volume-slider"
-        ).style.background = `linear-gradient(to right, ${s.color} ${
-          audio.volume * 100
-        }%, rgba(255,255,255,0.12) ${audio.volume * 100}%)`;
-
-        // Dots
-        STATIONS.forEach((st, i) => {
-          const dot = document.getElementById("dot-" + i);
-          if (i === currentIdx) {
-            dot.style.width = "24px";
-            dot.style.background = st.color;
-          } else {
-            dot.style.width = "8px";
-            dot.style.background = "rgba(255,255,255,0.2)";
-          }
-        });
-
-        // Station cards
-        STATIONS.forEach((st, i) => {
-          const card = document.getElementById("card-" + i);
-          const bars = document.getElementById("card-bars-" + i);
-          if (i === currentIdx) {
-            card.style.background = `${st.color}22`;
-            card.style.border = `1px solid ${st.color}66`;
-            document.getElementById("card-name-" + i).style.color = "#fff";
-            document.getElementById("card-genre-" + i).style.color = st.color;
-            bars.style.display = "flex";
-            [1, 2, 3].forEach((j) => {
-              const b = document.getElementById(`cbar-${i}-${j}`);
-              b.style.animation = isPlaying
-                ? `mini-bar ${0.5 + j * 0.15}s ease-in-out infinite alternate`
-                : "none";
-              b.style.height = isPlaying ? undefined : "4px";
-            });
-          } else {
-            card.style.background = "rgba(255,255,255,0.04)";
-            card.style.border = "1px solid rgba(255,255,255,0.07)";
-            document.getElementById("card-name-" + i).style.color =
-              "rgba(255,255,255,0.85)";
-            document.getElementById("card-genre-" + i).style.color =
-              "rgba(255,255,255,0.35)";
-            bars.style.display = "none";
-          }
-        });
-
-        setStatus("");
-      }
-
-      function setStatus(msg, isErr) {
-        const el = document.getElementById("status-msg");
-        el.textContent = msg;
-        el.style.color = isErr ? "#ff6b6b" : "rgba(255,255,255,0.4)";
-      }
-
-      function loadStation(idx) {
-        currentIdx = idx;
-        isPlaying = false;
-        isLoading = true;
-        updateUI();
-        setStatus("Connecting…");
-
-        audio.pause();
-        audio.src = STATIONS[idx].url;
-        audio.load();
-        audio.play().catch(() => setStatus("Tap play to start", false));
-      }
-
-      function togglePlay() {
-        if (isLoading) return;
-        if (isPlaying) {
-          audio.pause();
-        } else {
-          if (!audio.src) {
-            loadStation(currentIdx);
-            return;
-          }
-          isLoading = true;
-          setStatus("Connecting…");
-          updateUI();
-          audio.play().catch(() => {
-            isLoading = false;
-            setStatus("Playback failed", true);
-            updateUI();
-          });
-        }
-      }
-
-      function skipStation(dir) {
-        currentIdx = (currentIdx + dir + STATIONS.length) % STATIONS.length;
-        loadStation(currentIdx);
-      }
-
-      function setVolume(v) {
-        audio.volume = parseFloat(v);
-        updateUI();
-      }
-
-      function switchView(v) {
-        document.getElementById("view-player").style.display =
-          v === "player" ? "block" : "none";
-        document.getElementById("view-stations").style.display =
-          v === "stations" ? "block" : "none";
-        document.getElementById("tab-player").className =
-          "tab" + (v === "player" ? " active" : "");
-        document.getElementById("tab-stations").className =
-          "tab" + (v === "stations" ? " active" : "");
-      }
-
-      audio.addEventListener("playing", () => {
-        isPlaying = true;
-        isLoading = false;
-        updateUI();
+      hlsInstance.on(Hls.Events.ERROR, (_, data) => {
+        if (data.fatal) { isLoading = false; isPlaying = false; updateUI(); setStatus('Stream unavailable', true); }
       });
-      audio.addEventListener("waiting", () => {
-        isLoading = true;
-        updateUI();
-        setStatus("Buffering…");
-      });
-      audio.addEventListener("pause", () => {
-        isPlaying = false;
-        isLoading = false;
-        updateUI();
-      });
-      audio.addEventListener("error", () => {
-        isPlaying = false;
-        isLoading = false;
-        updateUI();
-        setStatus("Stream unavailable", true);
-      });
-      audio.addEventListener("canplay", () => {
-        isLoading = false;
-        updateUI();
-      });
+    } else {
+      setStatus('HLS not supported on this browser', true);
+      isLoading = false; updateUI();
+    }
+  } else {
+    audio.src = s.url;
+    audio.load();
+    audio.play().catch(() => setStatus('Tap play to start'));
+  }
+}
 
-      // Init
-      updateUI();
-    </script>
-  </body>
+function togglePlay() {
+  if (isLoading) return;
+  if (isPlaying) {
+    audio.pause();
+  } else {
+    if (!audio.src || audio.src === window.location.href) { loadStation(currentIdx); return; }
+    isLoading = true;
+    setStatus('Connecting…');
+    updateUI();
+    audio.play().catch(() => { isLoading = false; setStatus('Playback failed', true); updateUI(); });
+  }
+}
+
+function skipStation(dir) {
+  currentIdx = (currentIdx + dir + STATIONS.length) % STATIONS.length;
+  loadStation(currentIdx);
+}
+
+function setVolume(v) {
+  audio.volume = parseFloat(v);
+  updateUI();
+}
+
+function switchView(v) {
+  document.getElementById('view-player').style.display = v === 'player' ? 'block' : 'none';
+  document.getElementById('view-stations').style.display = v === 'stations' ? 'block' : 'none';
+  document.getElementById('tab-player').className = 'tab' + (v === 'player' ? ' active' : '');
+  document.getElementById('tab-stations').className = 'tab' + (v === 'stations' ? ' active' : '');
+}
+
+function setStatus(msg, isErr) {
+  const el = document.getElementById('status-msg');
+  el.textContent = msg;
+  el.style.color = isErr ? '#ff6b6b' : 'rgba(255,255,255,0.4)';
+}
+
+function updateUI() {
+  const s = STATIONS[currentIdx];
+  document.getElementById('glow').style.background = `radial-gradient(circle, ${s.color}30 0%, transparent 70%)`;
+  const card = document.getElementById('now-playing-card');
+  card.style.background = `linear-gradient(145deg, ${s.color}22, ${s.color}08)`;
+  card.style.border = `1px solid ${s.color}30`;
+  document.getElementById('station-emoji').textContent = s.emoji;
+  document.getElementById('station-name').textContent = s.name;
+  const genreEl = document.getElementById('station-genre');
+  genreEl.textContent = s.genre;
+  genreEl.style.color = s.color;
+  const btn = document.getElementById('play-btn');
+  btn.style.background = isLoading ? 'rgba(255,255,255,0.1)' : `linear-gradient(135deg, ${s.color}, ${s.color}cc)`;
+  btn.style.boxShadow = isPlaying ? `0 0 32px ${s.color}55` : 'none';
+  btn.textContent = isLoading ? '⏳' : isPlaying ? '⏸' : '▶';
+  const emojiEl = document.getElementById('station-emoji');
+  emojiEl.className = 'station-emoji' + (isPlaying ? ' spinning' : '');
+  const ring = document.getElementById('pulse-ring');
+  ring.style.border = `1px solid ${s.color}30`;
+  ring.className = 'pulse-ring' + (isPlaying ? ' active' : '');
+  document.querySelectorAll('.bar').forEach((b, i) => {
+    b.style.background = s.color;
+    if (isPlaying && !isLoading) {
+      b.classList.add('active');
+      b.style.animation = `bar-dance ${0.6 + Math.random() * 0.8}s ease-in-out infinite alternate`;
+      b.style.animationDelay = (i * 0.04) + 's';
+    } else {
+      b.classList.remove('active');
+      b.style.animation = 'none';
+      b.style.height = '4px';
+    }
+  });
+  document.getElementById('volume-slider').style.background =
+    `linear-gradient(to right, ${s.color} ${audio.volume*100}%, rgba(255,255,255,0.12) ${audio.volume*100}%)`;
+  STATIONS.forEach((st, i) => {
+    const dot = document.getElementById('dot-' + i);
+    dot.style.width = i === currentIdx ? '24px' : '8px';
+    dot.style.background = i === currentIdx ? st.color : 'rgba(255,255,255,0.2)';
+    const cardEl = document.getElementById('card-' + i);
+    const bars = document.getElementById('card-bars-' + i);
+    if (i === currentIdx) {
+      cardEl.style.background = `${st.color}22`;
+      cardEl.style.border = `1px solid ${st.color}66`;
+      document.getElementById('card-name-' + i).style.color = '#fff';
+      document.getElementById('card-genre-' + i).style.color = st.color;
+      bars.style.display = 'flex';
+      [1,2,3].forEach(j => {
+        const b = document.getElementById(`cbar-${i}-${j}`);
+        b.style.animation = isPlaying ? `mini-bar ${0.5+j*0.15}s ease-in-out infinite alternate` : 'none';
+        b.style.height = isPlaying ? '' : '4px';
+      });
+    } else {
+      cardEl.style.background = 'rgba(255,255,255,0.04)';
+      cardEl.style.border = '1px solid rgba(255,255,255,0.07)';
+      document.getElementById('card-name-' + i).style.color = 'rgba(255,255,255,0.85)';
+      document.getElementById('card-genre-' + i).style.color = 'rgba(255,255,255,0.35)';
+      bars.style.display = 'none';
+    }
+  });
+}
+
+audio.addEventListener('playing', () => { isPlaying = true; isLoading = false; updateUI(); });
+audio.addEventListener('waiting', () => { isLoading = true; updateUI(); setStatus('Buffering…'); });
+audio.addEventListener('pause',   () => { isPlaying = false; isLoading = false; updateUI(); });
+audio.addEventListener('error',   () => { isPlaying = false; isLoading = false; updateUI(); setStatus('Stream unavailable', true); });
+audio.addEventListener('canplay', () => { isLoading = false; updateUI(); });
+
+updateUI();
+</script>
+</body>
 </html>
