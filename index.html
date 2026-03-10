@@ -294,7 +294,7 @@ if (s.icon) {
   btn.style.boxShadow = isPlaying ? `0 0 32px ${s.color}55` : 'none';
   btn.textContent = isLoading ? '⏳' : isPlaying ? '⏸' : '▶';
   const emojiEl = document.getElementById('station-emoji');
-  emojiEl.className = 'station-emoji' + (isPlaying ? ' spinning' : '');
+  emojiEl.className = 'station-emoji';
   const ring = document.getElementById('pulse-ring');
   ring.style.border = `1px solid ${s.color}30`;
   ring.className = 'pulse-ring' + (isPlaying ? ' active' : '');
